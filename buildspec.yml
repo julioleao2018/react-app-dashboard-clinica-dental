@@ -5,17 +5,12 @@ phases:
     runtime-versions:
       nodejs: 18
     commands:
-      # Instala o pnpm globalmente
       - npm install -g pnpm
-      # Instala dependências usando o lockfile pnpm-lock.yaml
       - pnpm install
   build:
     commands:
-      # Faz o build do Next.js
       - pnpm run build
-      # Exporta para estático (gera a pasta out/)
       - pnpm run export
-
 artifacts:
   base-directory: out
   files:
