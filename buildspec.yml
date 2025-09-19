@@ -1,14 +1,21 @@
 version: 0.2
+
 phases:
   install:
     runtime-versions:
       nodejs: 18
     commands:
-      - npm ci
+      # Instala o pnpm globalmente
+      - npm install -g pnpm
+      # Instala dependências usando o lockfile pnpm-lock.yaml
+      - pnpm install
   build:
     commands:
-      - npm run build
-      - npm run export
+      # Faz o build do Next.js
+      - pnpm run build
+      # Exporta para estático (gera a pasta out/)
+      - pnpm run export
+
 artifacts:
   base-directory: out
   files:
