@@ -10,7 +10,6 @@ phases:
   build:
     commands:
       - pnpm run build
-      - pnpm run export
 artifacts:
   base-directory: out
   files:
