@@ -84,7 +84,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
           <li className="mt-auto">
             <a
               href="#"
-              className="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm font-medium leading-6 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              className="flex items-center justify-between font-extralight"
             >
               <Settings className="h-5 w-5 shrink-0" />
               Configurações
