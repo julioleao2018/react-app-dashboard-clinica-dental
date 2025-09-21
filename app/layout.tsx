@@ -1,5 +1,7 @@
 import type React from "react"
 import type { Metadata } from "next"
+// import { apiClient } from "@/lib/api-client"
+import { InitApiClient } from "@/components/init-api-client"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/next"
@@ -14,21 +16,16 @@ export const metadata: Metadata = {
   generator: "v0.app",
 }
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
-        <Suspense fallback={null}>
-          <AuthProvider>
-            {children}
-            <Toaster />
-          </AuthProvider>
-        </Suspense>
-        <Analytics />
+      <body>
+        <InitApiClient />
+        <AuthProvider>
+          {children}
+          <Toaster />
+        </AuthProvider>
       </body>
     </html>
   )

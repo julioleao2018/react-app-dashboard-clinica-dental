@@ -1,3 +1,5 @@
+import { loadConfig } from "@/lib/config"
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
 export interface LoginRequest {
@@ -17,11 +19,12 @@ export interface UsuarioResposta {
 }
 
 class ApiClient {
-  private baseUrl: string
+  private baseUrl: string = ""
   private token: string | null = null
 
-  constructor(baseUrl: string) {
-    this.baseUrl = baseUrl
+  async init() {
+    const config = await loadConfig()
+    this.baseUrl = config.API_BASE_URL
     if (typeof window !== "undefined") {
       this.token = localStorage.getItem("auth_token")
     }
@@ -87,4 +90,5 @@ class ApiClient {
   }
 }
 
-export const apiClient = new ApiClient(API_BASE_URL)
+// export const apiClient = new ApiClient(API_BASE_URL)
+export const apiClient = new ApiClient()
