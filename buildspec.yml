@@ -1,5 +1,9 @@
 version: 0.2
 
+env:
+  variables:
+    NEXT_PUBLIC_API_URL: "http://clinica-alb-1193470339.sa-east-1.elb.amazonaws.com"
+
 phases:
   install:
     runtime-versions:
