@@ -9,6 +9,7 @@ phases:
       - pnpm install
   build:
     commands:
+      - echo "API_URL=$NEXT_PUBLIC_API_URL"
       - pnpm run build
 artifacts:
   base-directory: out
