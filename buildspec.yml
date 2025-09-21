@@ -7,9 +7,11 @@ phases:
     commands:
       - npm install -g pnpm
       - pnpm install
+  pre_build:
+    commands:
+      - echo "API URL = $NEXT_PUBLIC_API_URL"
   build:
     commands:
-      - echo "API_URL=$NEXT_PUBLIC_API_URL"
       - pnpm run build
 artifacts:
   base-directory: out
