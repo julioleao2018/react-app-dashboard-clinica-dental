@@ -12,6 +12,8 @@ phases:
       - echo "API URL = $NEXT_PUBLIC_API_URL"
   build:
     commands:
+      - rm -rf .next
+      - rm -rf out
       - pnpm run build
 artifacts:
   base-directory: out
