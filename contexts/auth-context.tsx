@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
+import { apiClient, type LoginRequest } from "@/lib/api"
 
 interface User {
   id: string
@@ -28,48 +29,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const token = localStorage.getItem("auth_token")
     if (token) {
-      // TODO: Validate token with API
-      // For now, simulate user from token
-      const mockUser: User = {
-        id: "1",
-        name: "Dr. Silva",
-        email: "silva@clinica.com",
-        role: "dentist",
-        avatar: "/caring-doctor.png",
-      }
-      setUser(mockUser)
+      apiClient.setToken(token)
+      apiClient
+        .getProtectedData()
+        .then(() => {
+          // Token is valid, set mock user for now
+          const mockUser: User = {
+            id: "1",
+            name: "Dr. Silva",
+            email: "silva@clinica.com",
+            role: "dentist",
+            avatar: "/caring-doctor.png",
+          }
+          setUser(mockUser)
+        })
+        .catch(() => {
+          // Token is invalid, clear it
+          localStorage.removeItem("auth_token")
+          apiClient.clearToken()
+        })
+        .finally(() => {
+          setIsLoading(false)
+        })
+    } else {
+      setIsLoading(false)
     }
-    setIsLoading(false)
   }, [])
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true)
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/auth/login', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ email, password })
-      // })
-      // const data = await response.json()
+      const credentials: LoginRequest = { email, senha: password }
+      const response = await apiClient.login(credentials)
 
-      // Mock authentication for demo
-      if (email === "silva@clinica.com" && password === "demo123") {
-        const mockUser: User = {
-          id: "1",
-          name: "Dr. Silva",
-          email: "silva@clinica.com",
-          role: "dentist",
-          avatar: "/caring-doctor.png",
-        }
+      // Store JWT token
+      apiClient.setToken(response.access_token)
 
-        // Store JWT token (mock)
-        localStorage.setItem("auth_token", "mock_jwt_token_here")
-        setUser(mockUser)
-        return true
+      // Set user data (mock for now, should come from API)
+      const mockUser: User = {
+        id: "1",
+        name: "Dr. Silva",
+        email: email,
+        role: "dentist",
+        avatar: "/caring-doctor.png",
       }
 
-      return false
+      setUser(mockUser)
+      return true
     } catch (error) {
       console.error("Login error:", error)
       return false
@@ -79,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = () => {
-    localStorage.removeItem("auth_token")
+    apiClient.clearToken()
     setUser(null)
   }
 

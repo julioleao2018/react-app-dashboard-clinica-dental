@@ -4,15 +4,17 @@ import { useState } from "react"
 import { Calendar, Users, FileText, BarChart3, Settings, Menu, X, Bluetooth as Tooth, CreditCard } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 
 const navigation = [
-  { name: "Dashboard", href: "#", icon: BarChart3, current: true },
-  { name: "Pacientes", href: "#", icon: Users, current: false },
-  { name: "Agendamentos", href: "#", icon: Calendar, current: false },
-  { name: "Tratamentos", href: "#", icon: Tooth, current: false },
-  { name: "Histórico", href: "#", icon: FileText, current: false },
-  { name: "Financeiro", href: "#", icon: CreditCard, current: false },
-  { name: "Relatórios", href: "#", icon: BarChart3, current: false },
+  { name: "Dashboard", href: "/", icon: BarChart3 },
+  { name: "Pacientes", href: "/patients", icon: Users },
+  { name: "Agendamentos", href: "/appointments", icon: Calendar },
+  { name: "Tratamentos", href: "#", icon: Tooth },
+  { name: "Histórico", href: "#", icon: FileText },
+  { name: "Financeiro", href: "#", icon: CreditCard },
+  { name: "Relatórios", href: "#", icon: BarChart3 },
 ]
 
 export function DashboardSidebar() {
@@ -46,6 +48,8 @@ export function DashboardSidebar() {
 }
 
 function SidebarContent({ onClose }: { onClose?: () => void }) {
+  const pathname = usePathname()
+
   return (
     <>
       <div className="flex h-16 shrink-0 items-center justify-between">
@@ -63,29 +67,30 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
         <ul role="list" className="flex flex-1 flex-col gap-y-7">
           <li>
             <ul role="list" className="-mx-2 space-y-1">
-              {navigation.map((item) => (
-                <li key={item.name}>
-                  <a
-                    href={item.href}
-                    className={cn(
-                      item.current
-                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                        : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                      "group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-medium",
-                    )}
-                  >
-                    <item.icon className="h-5 w-5 shrink-0" />
-                    {item.name}
-                  </a>
-                </li>
-              ))}
+              {navigation.map((item) => {
+                const isCurrent = pathname === item.href
+                return (
+                  <li key={item.name}>
+                    <Link
+                      href={item.href}
+                      className={cn(
+                        isCurrent
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                          : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                        "group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-medium",
+                      )}
+                      onClick={onClose}
+                    >
+                      <item.icon className="h-5 w-5 shrink-0" />
+                      {item.name}
+                    </Link>
+                  </li>
+                )
+              })}
             </ul>
           </li>
           <li className="mt-auto">
-            <a
-              href="#"
-              className="flex items-center justify-between font-extralight"
-            >
+            <a href="#" className="flex items-center justify-between font-extralight">
               <Settings className="h-5 w-5 shrink-0" />
               Configurações
             </a>
