@@ -33,7 +33,7 @@ export default function LoginPage() {
         title: "Login realizado com sucesso",
         description: "Bem-vindo ao DentalCare!",
       })
-      router.push("/")
+      router.push("/dashboard")
     } else {
       toast({
         title: "Erro no login",
@@ -46,24 +46,24 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-medical-blue-50 to-medical-blue-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 text-center">
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <Tooth className="h-8 w-8 text-medical-blue-600" />
-            <span className="text-2xl font-bold text-medical-blue-900">DentalCare</span>
+        <CardHeader className="space-y-1">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <Tooth className="h-8 w-8 text-blue-600" />
+            <span className="text-2xl font-bold text-gray-900">DentalCare</span>
           </div>
-          <CardTitle className="text-2xl font-semibold">Fazer login</CardTitle>
-          <CardDescription>Entre com suas credenciais para acessar o sistema</CardDescription>
+          <CardTitle className="text-2xl font-bold text-center">Fazer login</CardTitle>
+          <CardDescription className="text-center">Entre com suas credenciais para acessar o sistema</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">E-mail</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="seu@email.com"
+                placeholder="Digite seu e-mail"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -75,15 +75,16 @@ export default function LoginPage() {
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Sua senha"
+                  placeholder="Digite sua senha"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  className="pr-10"
                   required
                 />
                 <Button
                   type="button"
                   variant="ghost"
-                  size="icon"
+                  size="sm"
                   className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
                 >
@@ -96,18 +97,27 @@ export default function LoginPage() {
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <Link
-                href="/forgot-password"
-                className="text-sm text-medical-blue-600 hover:text-medical-blue-700 hover:underline"
-              >
+              <Link href="/forgot-password" className="text-sm text-blue-600 hover:text-blue-700 hover:underline">
                 Esqueceu a senha?
               </Link>
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button
+              type="submit"
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+              disabled={isLoading}
+            >
               {isLoading ? "Entrando..." : "Entrar"}
             </Button>
           </form>
-          <div className="mt-6 text-center text-sm text-muted-foreground">
+
+          <div className="mt-4 text-center text-sm">
+            Não tem uma conta?{" "}
+            <Link href="/register" className="text-primary hover:underline font-medium">
+              Cadastre-se aqui
+            </Link>
+          </div>
+
+          <div className="mt-6 text-center text-sm text-gray-500">
             <p>Credenciais de demonstração:</p>
             <p>Email: silva@clinica.com</p>
             <p>Senha: demo123</p>

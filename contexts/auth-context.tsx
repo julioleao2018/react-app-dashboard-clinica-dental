@@ -11,9 +11,17 @@ interface User {
   avatar?: string
 }
 
+interface RegisterData {
+  name: string
+  email: string
+  password: string
+  role: "admin" | "dentist" | "receptionist"
+}
+
 interface AuthContextType {
   user: User | null
   login: (email: string, password: string) => Promise<boolean>
+  register: (data: RegisterData) => Promise<{ success: boolean; message: string }>
   logout: () => void
   resetPassword: (email: string) => Promise<boolean>
   changePassword: (token: string, newPassword: string) => Promise<boolean>
@@ -89,6 +97,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
   }
 
+  const register = async (data: RegisterData): Promise<{ success: boolean; message: string }> => {
+    setIsLoading(true)
+
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+
+    try {
+      // Simular verificação se email já existe
+      const existingUsers = JSON.parse(localStorage.getItem("registered_users") || "[]")
+      const emailExists = existingUsers.some((user: any) => user.email === data.email)
+
+      if (emailExists) {
+        return { success: false, message: "Este e-mail já está cadastrado" }
+      }
+
+      // Criar novo usuário
+      const newUser: User = {
+        id: Date.now().toString(),
+        name: data.name,
+        email: data.email,
+        role: data.role,
+        avatar: "/caring-doctor.png",
+      }
+
+      // Salvar usuário na lista de registrados
+      existingUsers.push({ ...newUser, password: data.password })
+      localStorage.setItem("registered_users", JSON.stringify(existingUsers))
+
+      console.log("[v0] Registro mocado bem-sucedido para:", data.email)
+      return { success: true, message: "Cadastro realizado com sucesso!" }
+    } catch (error) {
+      console.error("[v0] Erro no registro mocado:", error)
+      return { success: false, message: "Erro interno. Tente novamente." }
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const resetPassword = async (email: string): Promise<boolean> => {
     try {
       // TODO: Replace with actual API call
@@ -128,6 +173,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         login,
+        register,
         logout,
         resetPassword,
         changePassword,

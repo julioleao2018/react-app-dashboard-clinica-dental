@@ -41,20 +41,16 @@ export function DashboardHeader() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                className="relative h-8 w-8 rounded-full hover:bg-accent"
-              >
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="/caring-doctor.png" alt={user?.name} />
+              <Button variant="ghost" className="relative h-10 w-10 rounded-full hover:bg-accent">
+                <Avatar className="h-9 w-9">
+                  <AvatarImage src={user?.avatar || "/placeholder.svg"} alt={user?.name} />
                   <AvatarFallback className="bg-primary text-primary-foreground">
                     {user?.name?.charAt(0) || "U"}
                   </AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount sideOffset={5}>
+            <DropdownMenuContent className="w-56 z-[100]" align="end" forceMount sideOffset={5}>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium leading-none">{user?.name || "Usuário"}</p>

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -20,49 +21,11 @@ import { Textarea } from "@/components/ui/textarea"
 import { Search, Plus, Phone, Mail, Calendar, FileText } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { DashboardLayout } from "@/components/dashboard-layout"
-
-interface Patient {
-  id: string
-  name: string
-  email: string
-  phone: string
-  birthDate: string
-  address: string
-  notes: string
-  lastVisit: string
-  nextAppointment?: string
-  status: "active" | "inactive"
-  avatar?: string
-}
-
-const mockPatients: Patient[] = [
-  {
-    id: "1",
-    name: "Maria Silva",
-    email: "maria@email.com",
-    phone: "(11) 99999-9999",
-    birthDate: "1985-03-15",
-    address: "Rua das Flores, 123",
-    notes: "Paciente com histórico de sensibilidade",
-    lastVisit: "2024-01-15",
-    nextAppointment: "2024-02-20",
-    status: "active",
-    avatar: "/diverse-woman-portrait.png",
-  },
-  {
-    id: "2",
-    name: "João Santos",
-    email: "joao@email.com",
-    phone: "(11) 88888-8888",
-    birthDate: "1978-07-22",
-    address: "Av. Principal, 456",
-    notes: "Tratamento ortodôntico em andamento",
-    lastVisit: "2024-01-10",
-    status: "active",
-  },
-]
+import type { Patient } from "@/types/patient"
+import { mockPatients } from "@/data/mock-patients"
 
 export default function PatientsPage() {
+  const router = useRouter()
   const [patients, setPatients] = useState<Patient[]>(mockPatients)
   const [searchTerm, setSearchTerm] = useState("")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
@@ -96,6 +59,8 @@ export default function PatientsPage() {
       notes: newPatient.notes || "",
       lastVisit: "",
       status: "active",
+      cpf: newPatient.cpf || "",
+      profession: newPatient.profession || "",
     }
 
     setPatients([...patients, patient])
@@ -106,6 +71,10 @@ export default function PatientsPage() {
       title: "Sucesso",
       description: "Paciente adicionado com sucesso",
     })
+  }
+
+  const handlePatientClick = (patient: Patient) => {
+    router.push(`/patients/${patient.id}`)
   }
 
   return (
@@ -130,6 +99,7 @@ export default function PatientsPage() {
                 <DialogDescription>Preencha as informações do paciente</DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
+                {/* ... existing form fields ... */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">Nome *</Label>
@@ -168,6 +138,26 @@ export default function PatientsPage() {
                       value={newPatient.phone || ""}
                       onChange={(e) => setNewPatient({ ...newPatient, phone: e.target.value })}
                       placeholder="(11) 99999-9999"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="cpf">CPF</Label>
+                    <Input
+                      id="cpf"
+                      value={newPatient.cpf || ""}
+                      onChange={(e) => setNewPatient({ ...newPatient, cpf: e.target.value })}
+                      placeholder="000.000.000-00"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="profession">Profissão</Label>
+                    <Input
+                      id="profession"
+                      value={newPatient.profession || ""}
+                      onChange={(e) => setNewPatient({ ...newPatient, profession: e.target.value })}
+                      placeholder="Profissão"
                     />
                   </div>
                 </div>
@@ -230,7 +220,12 @@ export default function PatientsPage() {
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <h3 className="font-semibold text-lg text-gray-900">{patient.name}</h3>
+                      <h3
+                        className="font-semibold text-lg text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
+                        onClick={() => handlePatientClick(patient)}
+                      >
+                        {patient.name}
+                      </h3>
                       <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
                         <div className="flex items-center">
                           <Mail className="h-4 w-4 mr-1" />
@@ -255,7 +250,7 @@ export default function PatientsPage() {
                         </div>
                       )}
                     </div>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => handlePatientClick(patient)}>
                       <FileText className="h-4 w-4 mr-2" />
                       Ver Detalhes
                     </Button>
