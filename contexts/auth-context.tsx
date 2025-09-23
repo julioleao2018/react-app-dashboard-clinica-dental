@@ -18,10 +18,19 @@ interface RegisterData {
   role: "admin" | "dentist" | "receptionist"
 }
 
+
+interface ClinicRegisterData {
+  nome: string
+  telefone?: string
+  documento: string // CNPJ
+  numero_profissionais?: number
+}
+
 interface AuthContextType {
   user: User | null
   login: (email: string, password: string) => Promise<boolean>
   register: (data: RegisterData) => Promise<{ success: boolean; message: string }>
+  registerClinic: (data: ClinicRegisterData) => Promise<{ success: boolean; message: string }>
   logout: () => void
   resetPassword: (email: string) => Promise<boolean>
   changePassword: (token: string, newPassword: string) => Promise<boolean>
@@ -99,36 +108,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (data: RegisterData): Promise<{ success: boolean; message: string }> => {
     setIsLoading(true)
-
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
     try {
-      // Simular verificação se email já existe
-      const existingUsers = JSON.parse(localStorage.getItem("registered_users") || "[]")
-      const emailExists = existingUsers.some((user: any) => user.email === data.email)
-
-      if (emailExists) {
-        return { success: false, message: "Este e-mail já está cadastrado" }
-      }
-
-      // Criar novo usuário
-      const newUser: User = {
-        id: Date.now().toString(),
-        name: data.name,
+      // etapa 1 - criar usuário
+      const response = await apiClient.registerUser({
+        nome: data.name,
         email: data.email,
-        role: data.role,
-        avatar: "/caring-doctor.png",
+        senha: data.password,
+      })
+
+      if (!response?.access_token) {
+        return { success: false, message: "Erro ao criar usuário" }
       }
 
-      // Salvar usuário na lista de registrados
-      existingUsers.push({ ...newUser, password: data.password })
-      localStorage.setItem("registered_users", JSON.stringify(existingUsers))
+      // salvar token temporário (sem clínica ainda)
+      apiClient.setToken(response.access_token)
+      localStorage.setItem("auth_token", response.access_token)
 
-      console.log("[v0] Registro mocado bem-sucedido para:", data.email)
-      return { success: true, message: "Cadastro realizado com sucesso!" }
-    } catch (error) {
-      console.error("[v0] Erro no registro mocado:", error)
-      return { success: false, message: "Erro interno. Tente novamente." }
+      return { success: true, message: "Usuário criado, prossiga para configurar a clínica." }
+    } catch (error: any) {
+      console.error("Erro no Cadastro:", error)
+      return {
+        success: false,
+        message: error?.mensagem || "Erro inesperado. Tente novamente.",
+      }
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const registerClinic = async (clinicaData: { nome: string; telefone?: string; documento: string }) => {
+    setIsLoading(true)
+    try {
+      const response = await apiClient.registerClinic({
+        nome: clinicaData.nome,
+        telefone: clinicaData.telefone,
+        documento: clinicaData.documento,
+      })
+
+      if (!response?.access_token) {
+        return { success: false, message: "Erro ao criar clínica" }
+      }
+
+      // token definitivo (agora com clinica_id)
+      apiClient.setToken(response.access_token)
+      localStorage.setItem("auth_token", response.access_token)
+
+      return { success: true, message: "Clínica cadastrada com sucesso!" }
+    } catch (error: any) {
+      console.error("Register clinic error:", error)
+      return { success: false, message: error?.response?.data?.mensagem || "Erro interno" }
     } finally {
       setIsLoading(false)
     }
@@ -174,6 +202,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         login,
         register,
+        registerClinic,
         logout,
         resetPassword,
         changePassword,

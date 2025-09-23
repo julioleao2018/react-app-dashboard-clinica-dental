@@ -1,7 +1,8 @@
 import { loadConfig } from "@/lib/config"
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"
 
+// Tipos
 export interface LoginRequest {
   email: string
   senha: string
@@ -10,12 +11,45 @@ export interface LoginRequest {
 export interface LoginResponse {
   access_token: string
   token_type: string
+  expires_in?: number
 }
 
-export interface UsuarioResposta {
-  usuario_id: number
+export interface RegistroUsuarioRequest {
   nome: string
   email: string
+  senha: string
+}
+
+export interface RegistroUsuarioResponse {
+  usuario: {
+    id: string
+    nome: string
+    email: string
+  }
+  access_token: string
+  token_type: string
+  expires_in: number
+}
+
+export interface RegistroClinicaRequest {
+  nome: string
+  telefone?: string
+  documento: string // CNPJ
+  numero_profissionais?: number
+}
+
+export interface RegistroClinicaResponse {
+  clinica: {
+    id: string
+    nome: string
+  }
+  assinatura: {
+    status: string
+    data_fim: string
+  }
+  access_token: string
+  token_type: string
+  expires_in: number
 }
 
 class ApiClient {
@@ -24,7 +58,7 @@ class ApiClient {
 
   async init() {
     const config = await loadConfig()
-    this.baseUrl = config.API_BASE_URL
+    this.baseUrl = config.API_BASE_URL || API_BASE_URL
     if (typeof window !== "undefined") {
       this.token = localStorage.getItem("auth_token")
     }
@@ -60,8 +94,29 @@ class ApiClient {
       headers,
     })
 
+    // Melhor tratamento de erro
+    // if (!response.ok) {
+    //   let errorMessage = `Erro API: ${response.status}`
+    //   try {
+    //     const data = await response.json()
+    //     errorMessage = data?.mensagem || data?.detail || errorMessage
+    //   } catch (_) { }
+    //   throw new Error(errorMessage)
+    // }
+
     if (!response.ok) {
-      throw new Error(`API Error: ${response.status} ${response.statusText}`)
+      let errorMessage = `Erro API: ${response.status}`
+      let body: any = null
+      try {
+        body = await response.json()
+        errorMessage = body?.mensagem || body?.detail || errorMessage
+      } catch (_) { }
+
+      throw {
+        status: response.status,
+        mensagem: errorMessage,
+        raw: body,
+      }
     }
 
     return response.json()
@@ -74,10 +129,17 @@ class ApiClient {
     })
   }
 
-  async createUser(userData: LoginRequest): Promise<UsuarioResposta> {
-    return this.request<UsuarioResposta>("/v1/web/dental_clinic/usuarios", {
+  async registerUser(data: RegistroUsuarioRequest): Promise<RegistroUsuarioResponse> {
+    return this.request<RegistroUsuarioResponse>("/v1/web/dental_clinic/registro/usuario", {
       method: "POST",
-      body: JSON.stringify(userData),
+      body: JSON.stringify(data),
+    })
+  }
+
+  async registerClinic(data: RegistroClinicaRequest): Promise<RegistroClinicaResponse> {
+    return this.request<RegistroClinicaResponse>("/v1/web/dental_clinic/registro/clinica", {
+      method: "POST",
+      body: JSON.stringify(data),
     })
   }
 
