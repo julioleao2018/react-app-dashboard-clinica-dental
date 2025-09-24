@@ -11,9 +11,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { Building2, Users, Phone, FileText } from "lucide-react"
+import { useAuth } from "@/contexts/auth-context"
 
 
 export default function ClinicSetupPage() {
+  const { registerClinic, isLoading } = useAuth()
+  const { toast } = useToast()
+  const router = useRouter()
   const [formData, setFormData] = useState({
     clinicName: "",
     phone: "",
@@ -22,10 +26,6 @@ export default function ClinicSetupPage() {
     professionalCount: "",
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [isLoading, setIsLoading] = useState(false)
-
-  const { toast } = useToast()
-  const router = useRouter()
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
@@ -52,31 +52,27 @@ export default function ClinicSetupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!validateForm()) return
 
-    if (!validateForm()) {
-      return
-    }
+    const result = await registerClinic({
+      nome: formData.clinicName,
+      telefone: formData.phone,
+      documento: formData.document,
+      numero_profissionais: parseInt(formData.professionalCount) || 0,
+    })
 
-    setIsLoading(true)
-
-    try {
-      // Simular salvamento dos dados da clínica
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
+    if (result.success) {
       toast({
         title: "Configuração concluída!",
         description: "Bem-vindo! Seu teste grátis de 7 dias já começou.",
       })
-
-      router.push("/")
-    } catch (error) {
+      router.push("/dashboard")
+    } else {
       toast({
         title: "Erro",
-        description: "Erro ao salvar dados da clínica. Tente novamente.",
+        description: result.message,
         variant: "destructive",
       })
-    } finally {
-      setIsLoading(false)
     }
   }
 

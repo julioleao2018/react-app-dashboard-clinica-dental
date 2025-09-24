@@ -106,10 +106,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
   }
 
-  const register = async (data: RegisterData): Promise<{ success: boolean; message: string }> => {
+  const register = async (data: RegisterData) => {
     setIsLoading(true)
     try {
-      // etapa 1 - criar usuário
       const response = await apiClient.registerUser({
         nome: data.name,
         email: data.email,
@@ -120,9 +119,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, message: "Erro ao criar usuário" }
       }
 
-      // salvar token temporário (sem clínica ainda)
       apiClient.setToken(response.access_token)
       localStorage.setItem("auth_token", response.access_token)
+
+      setUser({
+        id: response.usuario?.id ?? "1",
+        name: response.usuario?.nome ?? data.name,
+        email: response.usuario?.email ?? data.email,
+        role: "admin",
+        avatar: "/caring-doctor.png"
+      })
 
       return { success: true, message: "Usuário criado, prossiga para configurar a clínica." }
     } catch (error: any) {
@@ -136,27 +142,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const registerClinic = async (clinicaData: { nome: string; telefone?: string; documento: string }) => {
+  const registerClinic = async (clinicaData: ClinicRegisterData) => {
     setIsLoading(true)
     try {
       const response = await apiClient.registerClinic({
         nome: clinicaData.nome,
         telefone: clinicaData.telefone,
         documento: clinicaData.documento,
+        numero_profissionais: clinicaData.numero_profissionais,
       })
 
       if (!response?.access_token) {
         return { success: false, message: "Erro ao criar clínica" }
       }
 
-      // token definitivo (agora com clinica_id)
+      // salva token definitivo
       apiClient.setToken(response.access_token)
       localStorage.setItem("auth_token", response.access_token)
+
+      // atualiza user no contexto
+      setUser({
+        id: response.usuario?.id ?? "1", // se a API já devolver o usuário, use
+        name: response.usuario?.nome ?? "Administrador",
+        email: response.usuario?.email ?? "",
+        role: "admin",
+        avatar: "/caring-doctor.png"
+      })
 
       return { success: true, message: "Clínica cadastrada com sucesso!" }
     } catch (error: any) {
       console.error("Register clinic error:", error)
-      return { success: false, message: error?.response?.data?.mensagem || "Erro interno" }
+      return {
+        success: false,
+        message: error?.mensagem || "Erro interno. Tente novamente."
+      }
     } finally {
       setIsLoading(false)
     }

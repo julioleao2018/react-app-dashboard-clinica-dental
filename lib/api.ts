@@ -39,6 +39,11 @@ export interface RegistroClinicaRequest {
 }
 
 export interface RegistroClinicaResponse {
+  usuario: {
+    id: string
+    nome: string
+    email: string
+  }
   clinica: {
     id: string
     nome: string
