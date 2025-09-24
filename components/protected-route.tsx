@@ -1,9 +1,8 @@
 "use client"
 
 import type React from "react"
-
 import { useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 
 interface ProtectedRouteProps {
@@ -14,17 +13,28 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
   const { user, isLoading } = useAuth()
   const router = useRouter()
+  const pathname = usePathname()
 
   useEffect(() => {
-    if (!isLoading && !user) {
+    if (isLoading) return
+
+    // Caso não esteja logado → login
+    if (!user) {
       router.push("/login")
+      return
     }
 
-    if (!isLoading && user && requiredRole && user.role !== requiredRole) {
-      // Redirect to unauthorized page or dashboard
-      router.push("/")
+    // Role específica exigida
+    if (requiredRole && user.role !== requiredRole) {
+      router.push("/") // ou "/unauthorized"
+      return
     }
-  }, [user, isLoading, router, requiredRole])
+
+    // Se for admin e ainda não tem clínica → força /clinic-setup
+    if (user.role === "admin" && !user.clinicaId && pathname !== "/clinic-setup") {
+      router.push("/clinic-setup")
+    }
+  }, [user, isLoading, router, requiredRole, pathname])
 
   if (isLoading) {
     return (
@@ -37,16 +47,16 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     )
   }
 
-  if (!user) {
-    return null
-  }
+  if (!user) return null
 
   if (requiredRole && user.role !== requiredRole) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-semibold mb-2">Acesso negado</h1>
-          <p className="text-muted-foreground">Você não tem permissão para acessar esta página.</p>
+          <p className="text-muted-foreground">
+            Você não tem permissão para acessar esta página.
+          </p>
         </div>
       </div>
     )

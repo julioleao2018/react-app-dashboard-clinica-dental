@@ -58,6 +58,7 @@ export default function ClinicSetupPage() {
       nome: formData.clinicName,
       telefone: formData.phone,
       documento: formData.document,
+      tipo_documento: formData.documentType.toUpperCase(),
       numero_profissionais: parseInt(formData.professionalCount) || 0,
     })
 

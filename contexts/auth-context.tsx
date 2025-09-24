@@ -2,12 +2,21 @@
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 import { apiClient, type LoginRequest } from "@/lib/api"
+import { jwtDecode } from "jwt-decode"
+
+interface DecodedToken {
+  sub: string
+  clinica_id?: string
+  perfil?: string
+  exp: number
+}
 
 interface User {
   id: string
   name: string
   email: string
   role: "admin" | "dentist" | "receptionist"
+  clinicaId?: string | null
   avatar?: string
 }
 
@@ -18,11 +27,11 @@ interface RegisterData {
   role: "admin" | "dentist" | "receptionist"
 }
 
-
 interface ClinicRegisterData {
   nome: string
   telefone?: string
-  documento: string // CNPJ
+  documento: string
+  tipo_documento: string
   numero_profissionais?: number
 }
 
@@ -43,34 +52,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
+  const decodeAndSetUser = (token: string, extra?: { nome?: string; email?: string }) => {
+    try {
+      const decoded = jwtDecode<DecodedToken>(token)
+
+      setUser({
+        id: decoded.sub,
+        name: extra?.nome ?? "Usuário",
+        email: extra?.email ?? "",
+        role: (decoded.perfil as User["role"]) ?? "admin",
+        clinicaId: decoded.clinica_id ?? null,
+        avatar: "/caring-doctor.png"
+      })
+    } catch (e) {
+      console.error("Erro ao decodificar token:", e)
+      setUser(null)
+    }
+  }
+
   useEffect(() => {
     const token = localStorage.getItem("auth_token")
     if (token) {
       apiClient.setToken(token)
-      apiClient
-        .getProtectedData()
-        .then(() => {
-          // Token is valid, set mock user for now
-          const mockUser: User = {
-            id: "1",
-            name: "Dr. Silva",
-            email: "silva@clinica.com",
-            role: "dentist",
-            avatar: "/caring-doctor.png",
-          }
-          setUser(mockUser)
-        })
-        .catch(() => {
-          // Token is invalid, clear it
-          localStorage.removeItem("auth_token")
-          apiClient.clearToken()
-        })
-        .finally(() => {
-          setIsLoading(false)
-        })
-    } else {
-      setIsLoading(false)
+      decodeAndSetUser(token)
     }
+    setIsLoading(false)
   }, [])
 
   const login = async (email: string, password: string): Promise<boolean> => {
@@ -79,19 +85,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const credentials: LoginRequest = { email, senha: password }
       const response = await apiClient.login(credentials)
 
-      // Store JWT token
       apiClient.setToken(response.access_token)
+      localStorage.setItem("auth_token", response.access_token)
 
-      // Set user data (mock for now, should come from API)
-      const mockUser: User = {
-        id: "1",
-        name: "Dr. Silva",
-        email: email,
-        role: "dentist",
-        avatar: "/caring-doctor.png",
-      }
-
-      setUser(mockUser)
+      decodeAndSetUser(response.access_token, { email })
       return true
     } catch (error) {
       console.error("Login error:", error)
@@ -103,6 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     apiClient.clearToken()
+    localStorage.removeItem("auth_token")
     setUser(null)
   }
 
@@ -122,14 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       apiClient.setToken(response.access_token)
       localStorage.setItem("auth_token", response.access_token)
 
-      setUser({
-        id: response.usuario?.id ?? "1",
-        name: response.usuario?.nome ?? data.name,
-        email: response.usuario?.email ?? data.email,
-        role: "admin",
-        avatar: "/caring-doctor.png"
-      })
-
+      decodeAndSetUser(response.access_token, { nome: data.name, email: data.email })
       return { success: true, message: "Usuário criado, prossiga para configurar a clínica." }
     } catch (error: any) {
       console.error("Erro no Cadastro:", error)
@@ -145,28 +136,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const registerClinic = async (clinicaData: ClinicRegisterData) => {
     setIsLoading(true)
     try {
-      const response = await apiClient.registerClinic({
-        nome: clinicaData.nome,
-        telefone: clinicaData.telefone,
-        documento: clinicaData.documento,
-        numero_profissionais: clinicaData.numero_profissionais,
-      })
+      const response = await apiClient.registerClinic(clinicaData)
 
       if (!response?.access_token) {
         return { success: false, message: "Erro ao criar clínica" }
       }
 
-      // salva token definitivo
       apiClient.setToken(response.access_token)
       localStorage.setItem("auth_token", response.access_token)
 
-      // atualiza user no contexto
-      setUser({
-        id: response.usuario?.id ?? "1", // se a API já devolver o usuário, use
-        name: response.usuario?.nome ?? "Administrador",
-        email: response.usuario?.email ?? "",
-        role: "admin",
-        avatar: "/caring-doctor.png"
+      decodeAndSetUser(response.access_token, {
+        nome: response.usuario?.nome,
+        email: response.usuario?.email
       })
 
       return { success: true, message: "Clínica cadastrada com sucesso!" }
@@ -181,39 +162,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const resetPassword = async (email: string): Promise<boolean> => {
-    try {
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/auth/reset-password', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ email })
-      // })
-
-      // Mock success for demo
-      return true
-    } catch (error) {
-      console.error("Reset password error:", error)
-      return false
-    }
-  }
-
-  const changePassword = async (token: string, newPassword: string): Promise<boolean> => {
-    try {
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/auth/change-password', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ token, newPassword })
-      // })
-
-      // Mock success for demo
-      return true
-    } catch (error) {
-      console.error("Change password error:", error)
-      return false
-    }
-  }
+  const resetPassword = async (email: string): Promise<boolean> => true
+  const changePassword = async (token: string, newPassword: string): Promise<boolean> => true
 
   return (
     <AuthContext.Provider
