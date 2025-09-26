@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useAuth } from "@/contexts/auth-context"
+import Link from "next/link"
 
 export function DashboardHeader() {
   const { user, logout } = useAuth()
@@ -43,9 +44,10 @@ export function DashboardHeader() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-10 w-10 rounded-full hover:bg-accent">
                 <Avatar className="h-9 w-9">
-                  <AvatarImage src={user?.avatar || "/placeholder.svg"} alt={user?.name} />
+                  {/* Aqui é o avatar do usuário logado */}
+                  <AvatarImage src={user?.avatar || "/user-placeholder.png"} alt={user?.nome} />
                   <AvatarFallback className="bg-primary text-primary-foreground">
-                    {user?.name?.charAt(0) || "U"}
+                    {user?.nome?.charAt(0) || "U"}
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -53,7 +55,7 @@ export function DashboardHeader() {
             <DropdownMenuContent className="w-56 z-[100]" align="end" forceMount sideOffset={5}>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{user?.name || "Usuário"}</p>
+                  <p className="text-sm font-medium leading-none">{user?.nome || "Usuário"}</p>
                   <p className="text-xs leading-none text-muted-foreground">{user?.email || "usuario@email.com"}</p>
                 </div>
               </DropdownMenuLabel>
@@ -62,9 +64,11 @@ export function DashboardHeader() {
                 <User className="mr-2 h-4 w-4" />
                 <span>Perfil</span>
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Configurações</span>
+              <DropdownMenuItem className="cursor-pointer" asChild>
+                <Link href="/clinic-config">
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Configurações</span>
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem

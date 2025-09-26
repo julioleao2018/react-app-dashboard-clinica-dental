@@ -17,7 +17,7 @@ export default function DashboardPage() {
         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6 rounded-lg shadow-lg">
           <div className="flex items-center gap-3 mb-2">
             <Sparkles className="h-6 w-6" />
-            <h1 className="text-2xl font-bold">Bem-vindo, {user?.name}!</h1>
+            <h1 className="text-2xl font-bold">Bem-vindo, {user?.nome}!</h1>
           </div>
           <p className="text-blue-100">
             Seu teste grátis de 7 dias já começou. Explore todas as funcionalidades do DentalCare!

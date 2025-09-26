@@ -1,8 +1,7 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Bluetooth as Tooth, Eye, EyeOff } from "lucide-react"
@@ -18,9 +17,17 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const { login } = useAuth()
+  const { user, login } = useAuth() // <-- pegar o user também
   const { toast } = useToast()
   const router = useRouter()
+
+  // se já tiver logado, não deixa acessar a tela de login
+  useEffect(() => {
+    console.log("User mudou:", user)
+    if (user) {
+      router.replace("/dashboard")
+    }
+  }, [user, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -33,7 +40,8 @@ export default function LoginPage() {
         title: "Login realizado com sucesso",
         description: "Bem-vindo ao DentalCare!",
       })
-      router.push("/dashboard")
+      // força redirecionamento imediato
+      router.replace("/dashboard")
     } else {
       toast({
         title: "Erro no login",
@@ -45,6 +53,11 @@ export default function LoginPage() {
     setIsLoading(false)
   }
 
+  if (user) {
+    // evita piscar tela de login caso já esteja logado
+    return null
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
@@ -54,7 +67,9 @@ export default function LoginPage() {
             <span className="text-2xl font-bold text-gray-900">DentalCare</span>
           </div>
           <CardTitle className="text-2xl font-bold text-center">Fazer login</CardTitle>
-          <CardDescription className="text-center">Entre com suas credenciais para acessar o sistema</CardDescription>
+          <CardDescription className="text-center">
+            Entre com suas credenciais para acessar o sistema
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -97,7 +112,10 @@ export default function LoginPage() {
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <Link href="/forgot-password" className="text-sm text-blue-600 hover:text-blue-700 hover:underline">
+              <Link
+                href="/forgot-password"
+                className="text-sm text-blue-600 hover:text-blue-700 hover:underline"
+              >
                 Esqueceu a senha?
               </Link>
             </div>

@@ -8,7 +8,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 
 const navigation = [
-  { name: "Dashboard", href: "/", icon: BarChart3 },
+  { name: "Dashboard", href: "/dashboard", icon: BarChart3 },
   { name: "Pacientes", href: "/patients", icon: Users },
   { name: "Agendamentos", href: "/appointments", icon: Calendar },
   { name: "Tratamentos", href: "#", icon: Tooth },
@@ -90,10 +90,13 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
             </ul>
           </li>
           <li className="mt-auto">
-            <a href="#" className="flex items-center justify-between font-extralight">
+            <Link
+              href="/clinic-config"
+              className="flex items-center justify-between font-extralight hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md p-2"
+            >
               <Settings className="h-5 w-5 shrink-0" />
               Configurações
-            </a>
+            </Link>
           </li>
         </ul>
       </nav>

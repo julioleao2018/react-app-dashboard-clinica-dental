@@ -57,8 +57,33 @@ export interface RegistroClinicaResponse {
   expires_in: number
 }
 
+// Tipos de configuração da clínica
+export interface ClinicaConfig {
+  id: string
+  clinica_id: string
+  nome?: string
+  email?: string
+  telefone?: string
+  documento?: string
+  fuso_horario?: string
+  logo_url?: string
+  cep?: string
+  endereco?: string
+  numero?: string
+  complemento?: string
+  bairro?: string
+  cidade?: string
+  estado?: string
+  chat_interno?: boolean
+  lista_espera?: boolean
+  pesquisa_satisfacao?: boolean
+  recebimento_tipo?: "dentist" | "clinic"
+}
+
+export type ClinicaConfigRequest = Partial<Omit<ClinicaConfig, "id" | "clinica_id">>
+
 class ApiClient {
-  private baseUrl: string = ""
+  private baseUrl: string = API_BASE_URL
   private token: string | null = null
 
   async init() {
@@ -93,6 +118,8 @@ class ApiClient {
     if (this.token) {
       headers.Authorization = `Bearer ${this.token}`
     }
+
+    console.log(">>> API Request:", { url, headers })
 
     const response = await fetch(url, {
       ...options,
@@ -155,6 +182,59 @@ class ApiClient {
   async healthCheck(): Promise<any> {
     return this.request("/v1/web/dental_clinic/healthcheck")
   }
+
+  // ============ Configurações da clínica ============
+
+  // GET config
+  async getClinicConfig(): Promise<ClinicaConfig> {
+    return this.request<ClinicaConfig>("/v1/web/dental_clinic/configuracoes")
+  }
+
+  // PUT config
+  async updateClinicConfig(data: ClinicaConfigRequest): Promise<ClinicaConfig> {
+    return this.request<ClinicaConfig>("/v1/web/dental_clinic/configuracoes", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    })
+  }
+
+  // POST logo
+  async uploadClinicLogo(file: File): Promise<{ logo_url: string }> {
+    const formData = new FormData()
+    formData.append("file", file)
+
+    const url = `${this.baseUrl}/v1/web/dental_clinic/configuracoes/logo`
+    const headers: HeadersInit = {}
+
+    if (this.token) {
+      headers.Authorization = `Bearer ${this.token}`
+    }
+
+    const response = await fetch(url, {
+      method: "POST",
+      body: formData,
+      headers, // não define Content-Type manualmente (o browser seta como multipart/form-data)
+    })
+
+    if (!response.ok) {
+      let errorMessage = `Erro API: ${response.status}`
+      let body: any = null
+      try {
+        body = await response.json()
+        errorMessage = body?.mensagem || body?.detail || errorMessage
+      } catch (_) { }
+
+      throw {
+        status: response.status,
+        mensagem: errorMessage,
+        raw: body,
+      }
+    }
+
+    return response.json()
+  }
 }
+
+
 
 export const apiClient = new ApiClient()

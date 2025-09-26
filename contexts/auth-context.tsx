@@ -3,25 +3,28 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 import { apiClient, type LoginRequest } from "@/lib/api"
 import { jwtDecode } from "jwt-decode"
+import Cookies from "js-cookie"
 
 interface DecodedToken {
   sub: string
   clinica_id?: string
   perfil?: string
-  exp: number
+  exp: number,
+  email?: string,
+  nome?: string
 }
 
 interface User {
   id: string
-  name: string
+  nome: string
   email: string
   role: "admin" | "dentist" | "receptionist"
-  clinicaId?: string | null
+  clinicaId: string | null
   avatar?: string
 }
 
 interface RegisterData {
-  name: string
+  nome: string
   email: string
   password: string
   role: "admin" | "dentist" | "receptionist"
@@ -58,11 +61,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setUser({
         id: decoded.sub,
-        name: extra?.nome ?? "Usuário",
-        email: extra?.email ?? "",
+        nome: decoded?.nome ?? "Usuário",
+        email: decoded?.email ?? "",
         role: (decoded.perfil as User["role"]) ?? "admin",
         clinicaId: decoded.clinica_id ?? null,
-        avatar: "/caring-doctor.png"
+        avatar: "/caring-doctor.png",
       })
     } catch (e) {
       console.error("Erro ao decodificar token:", e)
@@ -71,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    const token = localStorage.getItem("auth_token")
+    const token = Cookies.get("auth_token") || localStorage.getItem("auth_token")
     if (token) {
       apiClient.setToken(token)
       decodeAndSetUser(token)
@@ -79,16 +82,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false)
   }, [])
 
+  const saveToken = (token: string) => {
+    apiClient.setToken(token)
+    localStorage.setItem("auth_token", token)
+    Cookies.set("auth_token", token, {
+      expires: 7,
+      secure: true,
+      sameSite: "strict",
+    })
+  }
+
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true)
     try {
       const credentials: LoginRequest = { email, senha: password }
       const response = await apiClient.login(credentials)
 
-      apiClient.setToken(response.access_token)
-      localStorage.setItem("auth_token", response.access_token)
-
+      saveToken(response.access_token)
       decodeAndSetUser(response.access_token, { email })
+
       return true
     } catch (error) {
       console.error("Login error:", error)
@@ -101,6 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     apiClient.clearToken()
     localStorage.removeItem("auth_token")
+    Cookies.remove("auth_token")
     setUser(null)
   }
 
@@ -108,7 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true)
     try {
       const response = await apiClient.registerUser({
-        nome: data.name,
+        nome: data.nome,
         email: data.email,
         senha: data.password,
       })
@@ -117,10 +130,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, message: "Erro ao criar usuário" }
       }
 
-      apiClient.setToken(response.access_token)
-      localStorage.setItem("auth_token", response.access_token)
-
-      decodeAndSetUser(response.access_token, { nome: data.name, email: data.email })
+      saveToken(response.access_token)
+      decodeAndSetUser(response.access_token, { nome: data.nome, email: data.email })
       return { success: true, message: "Usuário criado, prossiga para configurar a clínica." }
     } catch (error: any) {
       console.error("Erro no Cadastro:", error)
@@ -142,12 +153,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, message: "Erro ao criar clínica" }
       }
 
-      apiClient.setToken(response.access_token)
-      localStorage.setItem("auth_token", response.access_token)
-
+      saveToken(response.access_token)
       decodeAndSetUser(response.access_token, {
         nome: response.usuario?.nome,
-        email: response.usuario?.email
+        email: response.usuario?.email,
       })
 
       return { success: true, message: "Clínica cadastrada com sucesso!" }
@@ -155,7 +164,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error("Register clinic error:", error)
       return {
         success: false,
-        message: error?.mensagem || "Erro interno. Tente novamente."
+        message: error?.mensagem || "Erro interno. Tente novamente.",
       }
     } finally {
       setIsLoading(false)
