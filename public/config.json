@@ -1,3 +1,3 @@
 {
-  "API_BASE_URL": "http://clinica-alb-1193470339.sa-east-1.elb.amazonaws.com"
+  "API_BASE_URL": "https://dm90upwfun486.cloudfront.net"
 }
