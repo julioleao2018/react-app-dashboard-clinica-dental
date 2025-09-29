@@ -76,7 +76,7 @@ export default function RegisterPage() {
     }
 
     const result = await register({
-      name: formData.name.trim(),
+      nome: formData.name.trim(),
       email: formData.email.toLowerCase(),
       password: formData.password,
       role: "admin", // Sempre admin no cadastro inicial
